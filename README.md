@@ -308,7 +308,7 @@ example1.conf：
 
 依赖中去掉了`ecj`，因为这个依赖maven仓库中最新版本也满足不了`Tomcat10.0.6`，需要从`Tomcat10.0.6`的安装包lib中复制`ecj-4.18.jar`到源码包的lib下，同时需要手动指定依赖：
 
-![image-20210606011043091](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210606011043091.png)
+![image-20210606011043091](.\doc\image\image-20210606011043091.png)
 
 依赖调整好以后，其他操作都和`apache-tomcat-8.5.9-src`一样。但是运行10.0.6后控制台输出有一些乱码，也不是中文乱码，尝试调试编码，没有解决，有解决乱码的同学可以告知一下。
 
