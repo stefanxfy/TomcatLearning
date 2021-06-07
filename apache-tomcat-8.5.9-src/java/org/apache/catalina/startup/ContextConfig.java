@@ -1226,7 +1226,6 @@ public class ContextConfig implements LifecycleListener {
             for (Map.Entry<ServletContainerInitializer,
                     Set<Class<?>>> entry :
                         initializerClassMap.entrySet()) {
-                System.out.println("addServletContainerInitializer=" + entry.getKey());
                 if (entry.getValue().isEmpty()) {
                     context.addServletContainerInitializer(
                             entry.getKey(), null);

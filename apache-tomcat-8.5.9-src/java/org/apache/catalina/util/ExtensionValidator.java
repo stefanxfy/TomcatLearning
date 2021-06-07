@@ -167,6 +167,7 @@ public final class ExtensionValidator {
     /**
      * Checks to see if the given system JAR file contains a MANIFEST, and adds
      * it to the container's manifest resources.
+     * 检查给定的系统JAR文件是否包含MANIFEST，并添加 它到容器的清单资源。
      *
      * @param jarFile The system JAR whose manifest to add
      * @throws IOException Error reading JAR file

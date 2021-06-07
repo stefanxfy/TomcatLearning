@@ -117,7 +117,6 @@ public class WebappServiceLoader<T> {
         Set<URL> containerServiceConfigFiles = new HashSet<>();
         while (containerResources.hasMoreElements()) {
             URL containerServiceConfigFile = containerResources.nextElement();
-            System.out.println(containerServiceConfigFile);
             containerServiceConfigFiles.add(containerServiceConfigFile);
             parseConfigFile(containerServiceClassNames, containerServiceConfigFile);
         }

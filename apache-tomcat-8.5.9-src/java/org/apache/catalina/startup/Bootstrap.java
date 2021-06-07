@@ -249,13 +249,16 @@ public final class Bootstrap {
 
 
     /**
+     * 初始化化类加载器，并初始化calatina
      * Initialize daemon.
      * @throws Exception Fatal initialization error
      */
     public void init() throws Exception {
 
+        // 初始化三个classLoader：
+        // commonLoader、catalinaLoader、sharedLoader
         initClassLoaders();
-
+        // 设置当前线程的ContextClassLoader为catalinaLoader
         Thread.currentThread().setContextClassLoader(catalinaLoader);
 
         SecurityClassLoad.securityClassLoad(catalinaLoader);
@@ -263,6 +266,7 @@ public final class Bootstrap {
         // Load our startup class and call its process() method
         if (log.isDebugEnabled())
             log.debug("Loading startup class");
+        // catalinaLoader 加载Catalina并实例化
         Class<?> startupClass =
             catalinaLoader.loadClass
             ("org.apache.catalina.startup.Catalina");
@@ -271,6 +275,8 @@ public final class Bootstrap {
         // Set the shared extensions class loader
         if (log.isDebugEnabled())
             log.debug("Setting startup class properties");
+        // 调用 catalina 的方法setParentClassLoader，
+        // 设置catalina的parentClassLoader 为 sharedLoader
         String methodName = "setParentClassLoader";
         Class<?> paramTypes[] = new Class[1];
         paramTypes[0] = Class.forName("java.lang.ClassLoader");
@@ -462,6 +468,7 @@ public final class Bootstrap {
             // Don't set daemon until init() has completed
             Bootstrap bootstrap = new Bootstrap();
             try {
+                // 1.初始化化类加载器，并初始化calatina
                 bootstrap.init();
             } catch (Throwable t) {
                 handleThrowable(t);
@@ -473,12 +480,15 @@ public final class Bootstrap {
             // When running as a service the call to stop will be on a new
             // thread so make sure the correct class loader is used to prevent
             // a range of class not found exceptions.
+            // 如果daemon不为空则只需要设置当前线程上下文累加器为catalinaLoader
             Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);
         }
 
         try {
             String command = "start";
             if (args.length > 0) {
+                // 默认command=start，如果args有参数，必须把start放在最后
+                // 如 -config xxx start
                 command = args[args.length - 1];
             }
 
@@ -490,6 +500,7 @@ public final class Bootstrap {
                 args[args.length - 1] = "stop";
                 daemon.stop();
             } else if (command.equals("start")) {
+                // 以下三个方法都是反射调用calatina的方法
                 daemon.setAwait(true);
                 daemon.load(args);
                 daemon.start();

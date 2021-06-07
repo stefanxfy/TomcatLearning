@@ -1,3 +1,9 @@
+## Tomcat架构
+
+![Tomcat整体架构-来自网络](https://img-blog.csdnimg.cn/20210606104411293.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
+
+![连接器和容器-来自网络](https://img-blog.csdnimg.cn/20210606104510147.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
+
 ## 搭建源码阅读环境
 
 阅读学习Tomcat源码，需要三件事：
@@ -22,7 +28,7 @@
 
 下载好的`apache-tomcat-8.5.9-src`，用IDEA打开并引入：File–>Project Structure–>Modules–>+–>import module。
 
-![image-20210606014348059](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210606014348059.png)
+![源码完整目录](https://img-blog.csdnimg.cn/20210606103513255.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 
 #### （1）新建pom.xml
 
@@ -116,11 +122,10 @@
 
 源码包中新建lib目录，从安装包中的lib目录复制`jasper.jar`到源码包的lib目录。这样做的目的有两个：
 
-- Tomcat运行时会默认扫描lib目录，没有lib目录虽然不会报错，但是控制台会有警告日志，提示lib目录不存在。![image-20210605232812293](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210605232812293.png)
-
+- Tomcat运行时会默认扫描lib目录，没有lib目录虽然不会报错，但是控制台会有警告日志，提示lib目录不存在。![缺少lib包警告](https://img-blog.csdnimg.cn/20210606103559864.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 - 安装包lib下jar包很多，没必要都复制过来，按需复制了`jasper.jar`，虽然`jasper.jar`中的代码和源码中的`org.apache.jasper`完全重了，但是这个jar包里有非常重要的配置信息，定义了`javax.servlet.ServletContainerInitializer`的实现类是`org.apache.jasper.servlet.JasperInitializer`，`Tomcat`启动时，`Context`的生命周期监听器`ContextConfig.configureStart`会扫描lib目录下的jar里面的配置信息，做一些类初始化等操作。这里就是主动实例化`JasperInitializer`，不然访问`jsp`就会报错。（百度到的都是在源码里写死加一个`JasperInitializer`的初始化，不推荐这样做，一定要找到原因。）
 
-![image-20210605233829600](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210605233829600.png)
+![解决JasperInitializer不能初始化问题](https://img-blog.csdnimg.cn/20210606103636921.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 
 #### （3）运行Bootstrap#main
 
@@ -140,19 +145,19 @@
 -Djava.util.logging.config.file=C:/study/tomcat/apache-tomcat-8.5.9-src/conf/logging.properties
 ```
 
-![image-20210606001353133](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210606001353133.png)
+![Edit Configurations...](https://img-blog.csdnimg.cn/20210606103744501.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 
 #### （4）运行并访问
 
 完成以上三步，就可以运行了：
 
-![image-20210606002221046](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210606002221046.png)
+![运行起来了，耶](https://img-blog.csdnimg.cn/20210606103926878.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_16,color_FFFFFF,t_70#pic_center)
 
 如果`test`目录有报错，可删除报错的位置（最好不要删除整个`test`目录，可以自己在`test`目录里写测试类`debug`）。正常运行后，在浏览器中访问http://127.0.0.1:8080/ , 点击页面中的超链接如`Documentation`、`Configuration`等都可以正常访问。
 
-![image-20210606002645829](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210606002645829.png)
+![ROOT首页](https://img-blog.csdnimg.cn/20210606104042437.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 
-![image-20210606002948939](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210606002948939.png)
+![/docs/config](https://img-blog.csdnimg.cn/20210606104110685.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 
 #### （5）-config指定配置路径运行
 
@@ -163,7 +168,7 @@
 -config C:/study/tomcat/conf/example1.conf start
 ```
 
-![image-20210606003921800](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210606003921800.png)
+![-config start](https://img-blog.csdnimg.cn/20210606104208594.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 
 example1.conf：
 
@@ -308,9 +313,9 @@ example1.conf：
 
 依赖中去掉了`ecj`，因为这个依赖maven仓库中最新版本也满足不了`Tomcat10.0.6`，需要从`Tomcat10.0.6`的安装包lib中复制`ecj-4.18.jar`到源码包的lib下，同时需要手动指定依赖：
 
-![image-20210606011043091](.\doc\image\image-20210606011043091.png)
+![ecj-4.18](https://img-blog.csdnimg.cn/20210606104240625.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 
 依赖调整好以后，其他操作都和`apache-tomcat-8.5.9-src`一样。但是运行10.0.6后控制台输出有一些乱码，也不是中文乱码，尝试调试编码，没有解决，有解决乱码的同学可以告知一下。
 
-![image-20210606013135492](C:\Users\stefan\AppData\Roaming\Typora\typora-user-images\image-20210606013135492.png)
+![Tomcat10也运行起来了，但是有乱码。。](https://img-blog.csdnimg.cn/20210606104315304.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)
 

@@ -219,6 +219,9 @@ public class Catalina {
             return false;
         }
 
+        // -config C:/study/tomcat/conf/example1.conf start
+        // ["-config", "C:/study/tomcat/conf/example1.conf", "start"]
+        // 获取config的文件路径
         for (int i = 0; i < args.length; i++) {
             if (isConfig) {
                 configFile = args[i];
@@ -254,6 +257,8 @@ public class Catalina {
 
         File file = new File(configFile);
         if (!file.isAbsolute()) {
+            // 如果configFile外面传入为空，则默认配置路径为
+            // catalinaBase/conf/server.xml
             file = new File(Bootstrap.getCatalinaBase(), configFile);
         }
         return (file);
@@ -527,6 +532,7 @@ public class Catalina {
             }
             if (inputStream == null) {
                 try {
+                    // 若inputStream=null，从网络中获取流
                     inputStream = getClass().getClassLoader()
                         .getResourceAsStream(getConfigFile());
                     inputSource = new InputSource
@@ -573,6 +579,7 @@ public class Catalina {
             }
 
             try {
+                // inputSource交由digester解析
                 inputSource.setByteStream(inputStream);
                 digester.push(this);
                 digester.parse(inputSource);
@@ -593,12 +600,12 @@ public class Catalina {
                 }
             }
         }
-
+        // 设置Server的Catalina、CatalinaHome、CatalinaBase
         getServer().setCatalina(this);
         getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
         getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
 
-        // Stream redirection
+        // Stream redirection ？？
         initStreams();
 
         // Start the new server
@@ -625,7 +632,9 @@ public class Catalina {
     public void load(String args[]) {
 
         try {
+            // 处理命令参数 如-config，获取config文件路径
             if (arguments(args)) {
+                //
                 load();
             }
         } catch (Exception e) {
@@ -652,6 +661,7 @@ public class Catalina {
 
         // Start the new server
         try {
+            // 一键启动
             getServer().start();
         } catch (LifecycleException e) {
             log.fatal(sm.getString("catalina.serverStartFail"), e);
@@ -670,6 +680,7 @@ public class Catalina {
 
         // Register shutdown hook
         if (useShutdownHook) {
+            // 注册 shutdown hook
             if (shutdownHook == null) {
                 shutdownHook = new CatalinaShutdownHook();
             }
@@ -686,9 +697,15 @@ public class Catalina {
         }
 
         if (await) {
+            // 调用Server的await，循环等待shutdown指令
             await();
+            // 如果接收到shutdown，就结束await()，调用stop停止Tomcat
             stop();
         }
+        // Tomcat停止的途径有两种：
+        // 1.发送shutdown指令，await循环结束，调用stop。
+        // 2.被kill调用-15，调用shutdownHook（CatalinaShutdownHook），
+        // 然后调用this.stop，如果await循环没有结束，this.stop会结束await循环。
     }
 
 
@@ -700,6 +717,7 @@ public class Catalina {
         try {
             // Remove the ShutdownHook first so that server.stop()
             // doesn't get invoked twice
+            // 首先删除ShutdownHook，以便server.stop() 不会被调用两次
             if (useShutdownHook) {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
 
@@ -725,6 +743,8 @@ public class Catalina {
                     && LifecycleState.DESTROYED.compareTo(state) >= 0) {
                 // Nothing to do. stop() was already called
             } else {
+                // 一键停止销毁
+                // 停止 销毁子容器、组件等
                 s.stop();
                 s.destroy();
             }
