@@ -144,12 +144,17 @@ while [ -h "$PRG" ]; do
 done
 
 # Get standard environment variables
+# 脚本名称catalina.sh
 PRGDIR=`dirname "$PRG"`
 
 # Only set CATALINA_HOME if not already set
+# 如果没有在系统环境里设置安装目录即CATALINA_HOME，
+# 则设置为catalina.sh脚本的上一级目录为CATALINA_HOME
 [ -z "$CATALINA_HOME" ] && CATALINA_HOME=`cd "$PRGDIR/.." >/dev/null; pwd`
 
 # Copy CATALINA_BASE from CATALINA_HOME if not already set
+# 如果没有在系统环境里设置工作目录即 CATALINA_BASE，
+# 则将 CATALINA_HOME 赋值给 CATALINA_BASE
 [ -z "$CATALINA_BASE" ] && CATALINA_BASE="$CATALINA_HOME"
 
 # Ensure that any user defined CLASSPATH variables are not used on startup,

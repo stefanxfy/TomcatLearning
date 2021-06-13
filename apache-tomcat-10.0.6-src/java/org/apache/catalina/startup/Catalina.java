@@ -17,11 +17,7 @@
 package org.apache.catalina.startup;
 
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.net.ConnectException;
 import java.net.Socket;
@@ -92,6 +88,7 @@ public class Catalina {
 
     /**
      * Pathname to the server configuration file.
+     * 默认server.xml路径 catalina.base/conf/server.xml
      */
     protected String configFile = SERVER_XML;
 
@@ -327,7 +324,9 @@ public class Catalina {
             usage();
             return false;
         }
-
+        // -config C:/study/tomcat/conf/example1.conf start
+        // ["-config", "C:/study/tomcat/conf/example1.conf", "start"]
+        // 获取config的文件路径
         for (String arg : args) {
             if (isConfig) {
                 configFile = arg;
@@ -727,20 +726,22 @@ public class Catalina {
 
         // Before digester - it may be needed
         initNaming();
-
         // Parse main server.xml
+        // 解析server.xml 怎么解析的，比较复杂
         parseServerXml(true);
         Server s = getServer();
         if (s == null) {
             return;
         }
-
+        // 设置Server的Catalina、CatalinaHome、CatalinaBase
         getServer().setCatalina(this);
         getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
         getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
 
         // Stream redirection
+        // 重定向标准输出流和异常输出流
         initStreams();
+
 
         // Start the new server
         try {
@@ -765,6 +766,7 @@ public class Catalina {
     public void load(String args[]) {
 
         try {
+            // 处理命令参数 如-config，获取config文件路径
             if (arguments(args)) {
                 load();
             }
@@ -792,6 +794,7 @@ public class Catalina {
 
         // Start the new server
         try {
+            // 一键启动
             getServer().start();
         } catch (LifecycleException e) {
             log.fatal(sm.getString("catalina.serverStartFail"), e);
@@ -804,6 +807,8 @@ public class Catalina {
         }
 
         if (log.isInfoEnabled()) {
+            String s = sm.getString("catalina.startup", Long.toString(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t1)));
+            System.out.println(getEncoding(s));
             log.info(sm.getString("catalina.startup", Long.toString(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t1))));
         }
 
@@ -814,6 +819,7 @@ public class Catalina {
 
         // Register shutdown hook
         if (useShutdownHook) {
+            // 注册 shutdown hook
             if (shutdownHook == null) {
                 shutdownHook = new CatalinaShutdownHook();
             }
@@ -830,15 +836,53 @@ public class Catalina {
         }
 
         if (await) {
+            // 调用Server的await，循环等待shutdown指令
             await();
+            // 如果接收到shutdown，就结束await()，调用stop停止Tomcat
             stop();
         }
     }
 
+    public String getEncoding(String str) {
+        String encode = "GB2312";
+        try {
+            if (str.equals(new String(str.getBytes(encode), encode))) { //判断是不是GB2312
+                String s = encode;
+                return s; //是的话，返回“GB2312“，以下代码同理
+            }
+        } catch (Exception exception) {
+        }
+        encode = "ISO-8859-1";
+        try {
+            if (str.equals(new String(str.getBytes(encode), encode))) { //判断是不是ISO-8859-1
+                String s1 = encode;
+                return s1;
+            }
+        } catch (Exception exception1) {
+        }
+        encode = "UTF-8";
+        try {
+            if (str.equals(new String(str.getBytes(encode), encode))) { //判断是不是UTF-8
+                String s2 = encode;
+                return s2;
+            }
+        } catch (Exception exception2) {
+        }
+        encode = "GBK";
+        try {
+            if (str.equals(new String(str.getBytes(encode), encode))) { //判断是不是GBK
+                String s3 = encode;
+                return s3;
+            }
+        } catch (Exception exception3) {
+        }
+        return "未知";
+    }
 
-    /**
-     * Stop an existing server instance.
-     */
+
+        /**
+         * Stop an existing server instance.
+         */
     public void stop() {
 
         try {
@@ -901,6 +945,9 @@ public class Catalina {
 
     protected void initStreams() {
         // Replace System.out and System.err with a custom PrintStream
+        // 可通过如下两个方法使用
+        // SystemLogHandler.startCapture(); 开始捕获标准流
+        // SystemLogHandler.stopCapture(); 停止并获取捕获的流内容
         System.setOut(new SystemLogHandler(System.out));
         System.setErr(new SystemLogHandler(System.err));
     }

@@ -16,6 +16,7 @@
  */
 package org.apache.tomcat.util.res;
 
+import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -80,6 +81,7 @@ public class StringManager {
                 locale = Locale.ROOT;
             }
             bnd = ResourceBundle.getBundle(bundleName, locale);
+//            System.out.println("ResourceBundle=" + bnd.toString() + ",locale.getLanguage=" + locale.getLanguage() + ",getCountry=" + locale.getCountry());
         } catch (MissingResourceException ex) {
             // Try from the current loader (that's the case for trusted apps)
             // Should only be required if using a TC5 style classloader structure
@@ -163,6 +165,11 @@ public class StringManager {
      */
     public String getString(final String key, final Object... args) {
         String value = getString(key);
+/*        try {
+            value = new String(value.getBytes("ISO-8859-1"), "UTF-8").intern();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }*/
         if (value == null) {
             value = key;
         }

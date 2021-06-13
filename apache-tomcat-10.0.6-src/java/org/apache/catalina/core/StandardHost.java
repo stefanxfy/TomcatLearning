@@ -233,6 +233,7 @@ public class StandardHost extends ContainerBase implements Host {
         File file = new File(getAppBase());
 
         // If not absolute, make it absolute
+        // appBase是相对路径，则 catalinaBase+appBase 获取绝对路径
         if (!file.isAbsolute()) {
             file = new File(getCatalinaBase(), file.getPath());
         }

@@ -62,8 +62,10 @@ public final class Bootstrap {
 
     static {
         // Will always be non-null
+        // 获取用户当前工作目录
         String userDir = System.getProperty("user.dir");
 
+        // 1. 首先从vm options 的-Dcatalina.home中获取catalina.home的路径
         // Home first
         String home = System.getProperty(Constants.CATALINA_HOME_PROP);
         File homeFile = null;
@@ -71,17 +73,19 @@ public final class Bootstrap {
         if (home != null) {
             File f = new File(home);
             try {
+                // 获取抽象路径名的规范形式，可以根据操作系统，解析得到规范的唯一路径名
+                // 如../ ./ 等getCanonicalFile可以正确解析，而getAbsoluteFile不会
                 homeFile = f.getCanonicalFile();
             } catch (IOException ioe) {
                 homeFile = f.getAbsoluteFile();
             }
         }
-
         if (homeFile == null) {
             // First fall-back. See if current directory is a bin directory
             // in a normal Tomcat install
+            // 2. vm options没有指定catalina.home，且userDir目录下有启动类bootstrap.jar
+            // 则userDir的上一级目录设置为 catalina.home
             File bootstrapJar = new File(userDir, "bootstrap.jar");
-
             if (bootstrapJar.exists()) {
                 File f = new File(userDir, "..");
                 try {
@@ -94,6 +98,8 @@ public final class Bootstrap {
 
         if (homeFile == null) {
             // Second fall-back. Use current directory
+            // 3. userDir下没有bootstrap.jar，且homeFile依然为null，
+            // 则将catalina.home直接设置为userDir
             File f = new File(userDir);
             try {
                 homeFile = f.getCanonicalFile();
@@ -107,8 +113,10 @@ public final class Bootstrap {
                 Constants.CATALINA_HOME_PROP, catalinaHomeFile.getPath());
 
         // Then base
+        // 4. 从 vm options 的-Dcatalina.base 获取catalina.base的路径
         String base = System.getProperty(Constants.CATALINA_BASE_PROP);
         if (base == null) {
+            // 没有指定-Dcatalina.base，则将catalina.home赋值给catalina.base
             catalinaBaseFile = catalinaHomeFile;
         } else {
             File baseFile = new File(base);
@@ -248,8 +256,10 @@ public final class Bootstrap {
      */
     public void init() throws Exception {
 
+        // 初始化三个classLoader：
+        // commonLoader、catalinaLoader、sharedLoader
         initClassLoaders();
-
+        // 设置当前线程的ContextClassLoader为catalinaLoader
         Thread.currentThread().setContextClassLoader(catalinaLoader);
 
         SecurityClassLoad.securityClassLoad(catalinaLoader);
@@ -257,12 +267,15 @@ public final class Bootstrap {
         // Load our startup class and call its process() method
         if (log.isDebugEnabled())
             log.debug("Loading startup class");
+        // 用 catalinaLoader加载并实例化Catalina
         Class<?> startupClass = catalinaLoader.loadClass("org.apache.catalina.startup.Catalina");
         Object startupInstance = startupClass.getConstructor().newInstance();
 
         // Set the shared extensions class loader
         if (log.isDebugEnabled())
             log.debug("Setting startup class properties");
+        // 调用 catalina 的方法setParentClassLoader，
+        // 设置catalina的parentClassLoader 为 sharedLoader
         String methodName = "setParentClassLoader";
         Class<?> paramTypes[] = new Class[1];
         paramTypes[0] = Class.forName("java.lang.ClassLoader");
@@ -433,12 +446,14 @@ public final class Bootstrap {
      * @param args Command line arguments to be processed
      */
     public static void main(String args[]) {
-
+        // Tomcat8.5.9还没有加锁的
+        // 这里加锁 应该是为了防止多次初始化吧
         synchronized (daemonLock) {
             if (daemon == null) {
                 // Don't set daemon until init() has completed
                 Bootstrap bootstrap = new Bootstrap();
                 try {
+                    // 1、初始化类加载器，并初始化calatina
                     bootstrap.init();
                 } catch (Throwable t) {
                     handleThrowable(t);
@@ -450,12 +465,16 @@ public final class Bootstrap {
                 // When running as a service the call to stop will be on a new
                 // thread so make sure the correct class loader is used to
                 // prevent a range of class not found exceptions.
+                // 设置当前线程的ContextClassLoader为catalinaLoader，
+                // 确保后续一些类使用正确的类加载加载，破坏双亲委派的一贯做法。
                 Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);
             }
         }
 
         try {
             String command = "start";
+            // 默认command=start，如果args有参数，必须把start放在最后
+            // 如 -config xxx start
             if (args.length > 0) {
                 command = args[args.length - 1];
             }
@@ -468,6 +487,7 @@ public final class Bootstrap {
                 args[args.length - 1] = "stop";
                 daemon.stop();
             } else if (command.equals("start")) {
+                // 以下三个方法都是反射调用calatina的方法
                 daemon.setAwait(true);
                 daemon.load(args);
                 daemon.start();

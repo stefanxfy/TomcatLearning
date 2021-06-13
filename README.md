@@ -1,3 +1,11 @@
+## 学习笔记
+
+1. [搭建Tomcat源码阅读环境，无bug运行调试。](https://stefan.blog.csdn.net/article/details/117620726)
+2. [Tomcat的启动与关闭：详解启动类Bootstrap和Catalina，彻底搞懂catalina.home和catalina.base的区别和作用范围](https://stefan.blog.csdn.net/article/details/117856646)
+3. [Tomcat如何快速响应静态资源（DefaultServlet+浏览器缓存）](https://stefan.blog.csdn.net/article/details/117126078)
+
+持续更新中…
+
 ## Tomcat架构
 
 ![Tomcat整体架构-来自网络](https://img-blog.csdnimg.cn/20210606104411293.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNjU4NjEyMA==,size_1,color_FFFFFF,t_70#pic_center)

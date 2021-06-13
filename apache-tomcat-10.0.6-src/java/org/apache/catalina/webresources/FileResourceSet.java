@@ -86,7 +86,6 @@ public class FileResourceSet extends AbstractFileResourceSet {
             }
             return new FileResource(root, path, f, isReadOnly(), null);
         }
-
         if (path.charAt(path.length() - 1) != '/') {
             path = path + '/';
         }

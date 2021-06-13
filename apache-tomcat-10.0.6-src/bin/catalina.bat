@@ -31,7 +31,7 @@ rem   script will have no effect at all on Windows Services. As such, any
 rem   local customizations made in a CATALINA_BASE/bin/setenv.bat script
 rem   will also have no effect on Tomcat when launched as a Windows Service.
 rem   The configuration that controls Windows Services is stored in the Windows
-rem   Registry, and is most conveniently maintained using the "tomcat@VERSION_MAJOR@w.exe"
+rem   Registry, and is most conveniently maintained using the "tomcat10w.exe"
 rem   maintenance utility.
 rem
 rem   CATALINA_HOME   May point at your Catalina "build" directory.
@@ -213,6 +213,8 @@ set "JAVA_OPTS=%JAVA_OPTS% %JSSE_OPTS%"
 rem Register custom URL handlers
 rem Do this here so custom URL handles (specifically 'war:...') can be used in the security policy
 set "JAVA_OPTS=%JAVA_OPTS% -Djava.protocol.handler.pkgs=org.apache.catalina.webresources"
+set "JAVA_OPTS=%JAVA_OPTS% -Duser.region=UC"
+
 
 if not "%CATALINA_LOGGING_CONFIG%" == "" goto noJuliConfig
 set CATALINA_LOGGING_CONFIG=-Dnop

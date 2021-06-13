@@ -467,11 +467,13 @@ public class HostConfig implements LifecycleListener {
      */
     protected void deployApps() {
         // Migrate legacy Java EE apps from legacyAppBase
+        // 从legacyAppBase迁移遗留Java EE应用到appBase，appBase原有的项目会删除
         migrateLegacyApps();
         File appBase = host.getAppBaseFile();
         File configBase = host.getConfigBaseFile();
         String[] filteredAppPaths = filterAppPaths(appBase.list());
-        // Deploy XML descriptors from configBase
+        // Deploy XML descriptors from configBase 通过context配置 部署web
+        // （configBase目录下可能有多个context.xml）
         deployDescriptors(configBase, configBase.list());
         // Deploy WARs
         deployWARs(appBase, filteredAppPaths);
@@ -659,9 +661,11 @@ public class HostConfig implements LifecycleListener {
             if (context.getDocBase() != null) {
                 File docBase = new File(context.getDocBase());
                 if (!docBase.isAbsolute()) {
+                    // 如果不是绝对路径，就是appBase下
                     docBase = new File(host.getAppBaseFile(), context.getDocBase());
                 }
                 // If external docBase, register .xml as redeploy first
+                // 如果 docBase不是appBase内 则先register .xml as redeploy first
                 if (!docBase.getCanonicalFile().toPath().startsWith(host.getAppBaseFile().toPath())) {
                     isExternal = true;
                     deployedApp.redeployResources.put(
@@ -685,6 +689,7 @@ public class HostConfig implements LifecycleListener {
                 } else {
                     log.warn(sm.getString("hostConfig.deployDescriptor.localDocBaseSpecified", docBase));
                     // Ignore specified docBase
+                    // 在 appBase内的 web 则忽略docBase
                     context.setDocBase(null);
                 }
             }
@@ -727,6 +732,7 @@ public class HostConfig implements LifecycleListener {
                 if (!isExternal) {
                     File warDocBase = new File(expandedDocBase.getAbsolutePath() + ".war");
                     if (warDocBase.exists()) {
+                        // redeployResources 热部署用的
                         deployedApp.redeployResources.put(
                                 warDocBase.getAbsolutePath(), Long.valueOf(warDocBase.lastModified()));
                     } else {
@@ -822,7 +828,7 @@ public class HostConfig implements LifecycleListener {
                             removeServiced(cn.getName());
                             continue;
                         }
-
+                        // 多线程 部署 war
                         // DeployWAR will call removeServiced
                         results.add(es.submit(new DeployWar(this, cn, war)));
                     } catch (Throwable t) {
@@ -889,6 +895,8 @@ public class HostConfig implements LifecycleListener {
      */
     protected void deployWAR(ContextName cn, File war) {
 
+        // webapps下的web项目里可以有一个META-INF目录，
+        // 里面放context.xml配置，如果没有，context配置就是conf/context.xml
         File xml = new File(host.getAppBaseFile(), cn.getBaseName() + "/" + Constants.ApplicationContextXml);
 
         File warTracker = new File(host.getAppBaseFile(), cn.getBaseName() + Constants.WarTracker);
@@ -955,6 +963,7 @@ public class HostConfig implements LifecycleListener {
                         cn.getPath(), Constants.ApplicationContextXml,
                         new File(host.getConfigBaseFile(), cn.getBaseName() + ".xml")));
             } else {
+                // 实例化context，默认StandardContext
                 context = (Context) Class.forName(contextClass).getConstructor().newInstance();
             }
         } catch (Throwable t) {
@@ -1144,6 +1153,7 @@ public class HostConfig implements LifecycleListener {
             if (deployThisXML && xml.exists()) {
                 synchronized (digesterLock) {
                     try {
+                        // 解析context
                         context = (Context) digester.parse(xml);
                     } catch (Exception e) {
                         log.error(sm.getString("hostConfig.deployDescriptor.error", xml), e);
@@ -1358,6 +1368,7 @@ public class HostConfig implements LifecycleListener {
             if (log.isDebugEnabled())
                 log.debug("Watching WatchedResource '" +
                         resource.getAbsolutePath() + "'");
+            // 变更自动重新加载
             app.reloadResources.put(resource.getAbsolutePath(),
                     Long.valueOf(resource.lastModified()));
         }
@@ -1691,12 +1702,13 @@ public class HostConfig implements LifecycleListener {
         }
 
         if (!host.getAppBaseFile().isDirectory()) {
+            //  如果getAppBaseFile 不是目录，则打印异常日志，同时关闭自动部署
             log.error(sm.getString("hostConfig.appBase", host.getName(),
                     host.getAppBaseFile().getPath()));
             host.setDeployOnStartup(false);
             host.setAutoDeploy(false);
         }
-
+        // 默认deployOnStartup = true
         if (host.getDeployOnStartup()) {
             deployApps();
         }

@@ -636,7 +636,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         if (catalinaBase != null) {
             return catalinaBase;
         }
-
+        // 如果catalinaBase=null，则获取CatalinaHome赋值给catalinaBase
         catalinaBase = getCatalinaHome();
         return catalinaBase;
     }
