@@ -149,6 +149,7 @@ public final class Bootstrap {
 
     private void initClassLoaders() {
         try {
+            // catalinaLoader --> commonLoader ---> systemClassLoader
             commonLoader = createClassLoader("common", null);
             if (commonLoader == null) {
                 // no config file, default to this loader - we might be in a 'single' env.

@@ -248,15 +248,19 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         if (p == null) {
             p = getSystemClassLoader();
         }
+        // 将webappClassLoader的parent设置为systemClassLoader
         this.parent = p;
 
+        // 先获取java.lang的类加载器，一般就是Bootstrap ClassLoader了
         ClassLoader j = String.class.getClassLoader();
         if (j == null) {
+            // 获取 SystemClassLoader，然后循环获取其parent，即extClassLoader
             j = getSystemClassLoader();
             while (j.getParent() != null) {
                 j = j.getParent();
             }
         }
+        // 所以最后javaseClassLoader 就是extClassLoader
         this.javaseClassLoader = j;
 
         securityManager = System.getSecurityManager();
@@ -863,6 +867,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                         new PrivilegedFindClassByName(name);
                     clazz = AccessController.doPrivileged(dp);
                 } else {
+                    // 自己加载，没有委托给父类加载加载
                     clazz = findClassInternal(name);
                 }
             } catch(AccessControlException ace) {
@@ -1257,11 +1262,12 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             if (log.isDebugEnabled())
                 log.debug("loadClass(" + name + ", " + resolve + ")");
             Class<?> clazz = null;
-
+//            System.out.println("name=" + name + ", parent=" + getParent());
             // Log access to stopped class loader
             checkStateForClassLoading(name);
 
             // (0) Check our previously loaded local class cache
+            // 1. 先从Tomcat自己的缓存中查找，是否已经加载过
             clazz = findLoadedClass0(name);
             if (clazz != null) {
                 if (log.isDebugEnabled())
@@ -1272,6 +1278,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
 
             // (0.1) Check our previously loaded class cache
+            // 2. 从jvm缓存中查找，是否已经被加载过
             clazz = JreCompat.isGraalAvailable() ? null : findLoadedClass(name);
             if (clazz != null) {
                 if (log.isDebugEnabled())
@@ -1284,8 +1291,11 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             // (0.2) Try loading the class with the system class loader, to prevent
             //       the webapp from overriding Java SE classes. This implements
             //       SRV.10.7.2
+            // 3. 这里注释有点问题，应该是由extClassLoader去加载，
+            // 可以保护<JAVA_HOME>/jre/lib和<JAVA_HOME>/jre/lib/ext 下的类库不被外界覆盖
             String resourceName = binaryNameToPath(name, false);
 
+            // 获取 extClassLoader
             ClassLoader javaseLoader = getJavaseClassLoader();
             boolean tryLoadingFromJavaseLoader;
             try {
@@ -1318,6 +1328,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
             if (tryLoadingFromJavaseLoader) {
                 try {
+                    // extClassLoader 加载
                     clazz = javaseLoader.loadClass(name);
                     if (clazz != null) {
                         if (resolve)
@@ -1344,9 +1355,14 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
 
             boolean delegateLoad = delegate || filter(name, true);
-
+            // 若 parent=catalinaLoader，
+            // 则weappClassLoader--->catalinaLOader---> commonLoader ---> systemClassLoader--->ExtClassLoader--->BootstrapClassLoader
+            // 若 parent=systemClassLoader，
+            // 则weappClassLoader---> systemClassLoader--->ExtClassLoader--->BootstrapClassLoader
             // (1) Delegate to our parent if requested
             if (delegateLoad) {
+                // delegateLoad = true 遵循双亲委派
+                // 可以整体上设置遵循delegate=true，也可以某些类遵循双亲委派如jakarta下的类库
                 if (log.isDebugEnabled())
                     log.debug("  Delegating to parent classloader1 " + parent);
                 try {
@@ -1367,6 +1383,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             if (log.isDebugEnabled())
                 log.debug("  Searching local repositories");
             try {
+                // 自己加载， 不会委派给父类加载器加载，这就破坏了双亲委派
                 clazz = findClass(name);
                 if (clazz != null) {
                     if (log.isDebugEnabled())
@@ -1384,6 +1401,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 if (log.isDebugEnabled())
                     log.debug("  Delegating to parent classloader at end: " + parent);
                 try {
+                    // 最后交由Class.forName 加载，传入的是当前类加载的parengt，即systemClassLoader
                     clazz = Class.forName(name, false, parent);
                     if (clazz != null) {
                         if (log.isDebugEnabled())

@@ -1153,8 +1153,9 @@ public class HostConfig implements LifecycleListener {
             if (deployThisXML && xml.exists()) {
                 synchronized (digesterLock) {
                     try {
-                        // 解析context
+                        // 解析context MATA-INF/context.xml
                         context = (Context) digester.parse(xml);
+
                     } catch (Exception e) {
                         log.error(sm.getString("hostConfig.deployDescriptor.error", xml), e);
                         context = new FailedContext();

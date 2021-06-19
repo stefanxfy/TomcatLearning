@@ -35,6 +35,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
@@ -106,6 +107,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
 
     /**
+     * 通过JNDI提供统一的命名对象访问接口
      * Global naming resources.
      */
     private NamingResourcesImpl globalNamingResources = null;
@@ -918,27 +920,31 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected void startInternal() throws LifecycleException {
-
+        // 1、触发configure_start 事件
         fireLifecycleEvent(CONFIGURE_START_EVENT, null);
+        // 2、Server的状态调整为starting
         setState(LifecycleState.STARTING);
-
+        // 3、globalNamingResources start
         globalNamingResources.start();
 
         // Start our defined Services
         synchronized (servicesLock) {
+            // 4、开启所有service
             for (Service service : services) {
                 service.start();
             }
         }
 
         if (periodicEventDelay > 0) {
+            // 5、periodicEventDelay > 0 设置了周期性事件，每一分钟检查一次周期性事件是否开启
             monitorFuture = getUtilityExecutor().scheduleWithFixedDelay(
                     () -> startPeriodicLifecycleEvent(), 0, 60, TimeUnit.SECONDS);
         }
     }
 
-
+    private static AtomicInteger count = new AtomicInteger(0);
     protected void startPeriodicLifecycleEvent() {
+        // 周期性任务isDone会永远返回false，即一直保持state，如果返回了true，那就是异常结束了
         if (periodicLifecycleEventFuture == null || (periodicLifecycleEventFuture != null && periodicLifecycleEventFuture.isDone())) {
             if (periodicLifecycleEventFuture != null && periodicLifecycleEventFuture.isDone()) {
                 // There was an error executing the scheduled task, get it and log it
@@ -951,6 +957,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             periodicLifecycleEventFuture = getUtilityExecutor().scheduleAtFixedRate(
                     () -> fireLifecycleEvent(Lifecycle.PERIODIC_EVENT, null), periodicEventDelay, periodicEventDelay, TimeUnit.SECONDS);
         }
+
     }
 
 

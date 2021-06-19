@@ -22,3 +22,4 @@ tmp
 hs_err_pid*
 yml
 *.idea
+logs

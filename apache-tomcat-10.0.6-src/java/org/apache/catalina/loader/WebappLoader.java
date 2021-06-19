@@ -362,6 +362,7 @@ public class WebappLoader extends LifecycleMBeanBase implements Loader{
         try {
 
             classLoader = createClassLoader();
+            System.out.println(context.getClass().getClassLoader() + ", context=" + context.getPath() + ", " + classLoader + ":parent="+ classLoader.getParent() + ", context.getParentClassLoader()=" + context.getParentClassLoader());
             classLoader.setResources(context.getResources());
             classLoader.setDelegate(this.delegate);
 
@@ -469,7 +470,6 @@ public class WebappLoader extends LifecycleMBeanBase implements Loader{
         if (ParallelWebappClassLoader.class.getName().equals(loaderClass)) {
             return new ParallelWebappClassLoader(context.getParentClassLoader());
         }
-
         Class<?> clazz = Class.forName(loaderClass);
         WebappClassLoaderBase classLoader = null;
 
