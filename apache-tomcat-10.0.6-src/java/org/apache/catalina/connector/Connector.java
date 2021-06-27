@@ -1017,6 +1017,7 @@ public class Connector extends LifecycleMBeanBase  {
         }
 
         // Initialize adapter
+        //
         adapter = new CoyoteAdapter(this);
         protocolHandler.setAdapter(adapter);
         if (service != null) {

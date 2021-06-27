@@ -102,7 +102,7 @@ public class MapperListener extends LifecycleMBeanBase
         }
 
         findDefaultHost();
-
+        // 递归给engine及其子容器加监听器MapperListener
         addListeners(engine);
 
         Container[] conHosts = engine.findChildren();
@@ -110,6 +110,7 @@ public class MapperListener extends LifecycleMBeanBase
             Host host = (Host) conHost;
             if (!LifecycleState.NEW.equals(host.getState())) {
                 // Registering the host will register the context and wrappers
+                // 注册 host，以及其下面的context、wrapper到Mapper的关系上
                 registerHost(host);
             }
         }
