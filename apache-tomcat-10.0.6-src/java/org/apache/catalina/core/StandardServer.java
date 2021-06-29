@@ -661,7 +661,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
                         // Ignore
                     }
                 }
-
                 // Match against our command string
                 boolean match = command.toString().equals(shutdown);
                 if (match) {
