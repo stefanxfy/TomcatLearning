@@ -14,35 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -----------------------------------------------------------------------------
-logs
-nbproject
-output
-# Next line commented out, because test/webapp-virtual-library and
-# test/webapp-virtual-webapp use it:
-# target
-work
-build.properties
-mvn.properties
-.ant-targets-build.xml
-.checkstyle
-.classpath
-.externalToolBuilders
-.fbprefs
-.project
-.settings
 .idea
-.vscode
-*.iml
-*.ipr
-*.iws
-*.asc
-*.jj
-*.tmp
-maven-resolver-ant-tasks-*.jar
-thumbs.db
-Thumbs.db
-bin/setenv.*
-java/org/apache/catalina/startup/catalina.properties
-modules/jdbc-pool/bin
-modules/jdbc-pool/includes
-webapps/docs/jdbc-pool.xml
+target
+logs
+work

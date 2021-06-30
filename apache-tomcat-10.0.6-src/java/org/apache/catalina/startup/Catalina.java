@@ -846,7 +846,7 @@ public class Catalina {
                 }
             }
         });
-//        thread.setDaemon(true);
+        thread.setDaemon(true);
         thread.start();
         System.out.println("isDaemon=" + thread.isDaemon());
         if (await) {
