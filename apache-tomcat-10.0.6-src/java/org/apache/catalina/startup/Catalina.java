@@ -833,22 +833,6 @@ public class Catalina {
                         false);
             }
         }
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        System.out.println("------");
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-        thread.setDaemon(true);
-        thread.start();
-        System.out.println("isDaemon=" + thread.isDaemon());
         if (await) {
             // 调用Server的await，循环等待shutdown指令
             await();

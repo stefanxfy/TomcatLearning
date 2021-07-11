@@ -234,6 +234,7 @@ public interface ProtocolHandler {
             IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
         if (protocol == null || "HTTP/1.1".equals(protocol)
                 || org.apache.coyote.http11.Http11NioProtocol.class.getName().equals(protocol)) {
+            // 默认 http11 nio
             return new org.apache.coyote.http11.Http11NioProtocol();
         } else if ("AJP/1.3".equals(protocol)
                 || org.apache.coyote.ajp.AjpNioProtocol.class.getName().equals(protocol)) {

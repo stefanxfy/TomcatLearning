@@ -37,6 +37,4 @@
         <servlet-name>TestShutdownServlet</servlet-name>
         <url-pattern>/testShutdown</url-pattern>
     </servlet-mapping>
- 
-
 </web-app>

@@ -589,6 +589,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         }
 
         endpoint.start();
+        // 总是有一个定时任务  监控另一个核心定时任务的存活
         monitorFuture = getUtilityExecutor().scheduleWithFixedDelay(
                 () -> {
                     if (!isPaused()) {

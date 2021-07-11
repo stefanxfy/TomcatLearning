@@ -582,6 +582,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
         // Set up a server socket to wait on
         try {
+            // 建立一个server socket 端口默认为8005
             awaitSocket = new ServerSocket(getPortWithOffset(), 1,
                     InetAddress.getByName(address));
         } catch (IOException e) {
@@ -593,7 +594,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
         try {
             awaitThread = Thread.currentThread();
-
             // Loop waiting for a connection and a valid command
             while (!stopAwait) {
                 ServerSocket serverSocket = awaitSocket;
@@ -636,6 +636,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
                             random = new Random();
                         expected += (random.nextInt() % 1024);
                     }
+                    // 读取 command
                     while (expected > 0) {
                         int ch = -1;
                         try {
@@ -662,9 +663,11 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
                     }
                 }
                 // Match against our command string
+                // 匹配shutdown指令
                 boolean match = command.toString().equals(shutdown);
                 if (match) {
                     log.info(sm.getString("standardServer.shutdownViaPort"));
+                    // 匹配成功，退出循环
                     break;
                 } else
                     log.warn(sm.getString("standardServer.invalidShutdownCommand", command.toString()));
