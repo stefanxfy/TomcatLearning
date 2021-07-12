@@ -603,6 +603,9 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
 
         private void addEvent(PollerEvent event) {
             events.offer(event);
+            // wakeupCounter的作用：
+            // wakeupCounter 更新后==0，则selector.wakeup()，使得select立即返回
+            //
             if (wakeupCounter.incrementAndGet() == 0) {
                 selector.wakeup();
             }
@@ -698,16 +701,21 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
          * @param socketWrapper The socket wrapper
          */
         public void register(final NioSocketWrapper socketWrapper) {
+            // 将socketWrapper感兴趣事件设置为OP_READ
             socketWrapper.interestOps(SelectionKey.OP_READ);//this is what OP_REGISTER turns into.
             PollerEvent event = null;
+            // 从缓存中获取PollerEvent
             if (eventCache != null) {
                 event = eventCache.pop();
             }
             if (event == null) {
+                // 缓存中没有，则新建一个 PollerEvent
                 event = new PollerEvent(socketWrapper, OP_REGISTER);
             } else {
+                // 缓存有，则重置PollerEvent为OP_REGISTER
                 event.reset(socketWrapper, OP_REGISTER);
             }
+            // 将PollerEvent添加到events阻塞队列中
             addEvent(event);
         }
 
@@ -756,12 +764,18 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                     if (!close) {
                         hasEvents = events();
                         if (wakeupCounter.getAndSet(-1) > 0) {
+                            // wakeupCounter 设置为-1，并返回旧值, 旧wakeupCounter > 0 说明有PollerEvent要处理
+                            // 则调用selector.selectNow() 不阻塞
                             // If we are here, means we have other stuff to do
                             // Do a non blocking select
                             keyCount = selector.selectNow();
                         } else {
+                            // wakeupCounter 设置为-1，并返回旧值, 旧wakeupCounter <= 0 说明没有PollerEvent要处理
+                            // 则调用 阻塞的 selector.select
                             keyCount = selector.select(selectorTimeout);
                         }
+                        // 没有PollerEvent要处理或者已经被处理，
+                        // 这里设置 wakeupCounter = 0
                         wakeupCounter.set(0);
                     }
                     if (close) {
@@ -791,10 +805,12 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                 while (iterator != null && iterator.hasNext()) {
                     SelectionKey sk = iterator.next();
                     iterator.remove();
+                    // 遍历selectedKeys 并取出 附件 NioSocketWrapper
                     NioSocketWrapper socketWrapper = (NioSocketWrapper) sk.attachment();
                     // Attachment may be null if another thread has called
                     // cancelledKey()
                     if (socketWrapper != null) {
+                        // socketWrapper不为null，则处理该任务
                         processKey(sk, socketWrapper);
                     }
                 }
