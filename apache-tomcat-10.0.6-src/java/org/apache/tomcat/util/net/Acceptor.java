@@ -103,6 +103,7 @@ public class Acceptor<U> implements Runnable {
                     try {
                         // Accept the next incoming connection from the server
                         // socket
+                        // accept 并没有注册给 selector
                         socket = endpoint.serverSocketAccept();
                     } catch (Exception ioe) {
                         // We didn't get a socket

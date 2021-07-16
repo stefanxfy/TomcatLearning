@@ -242,6 +242,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
             InetSocketAddress addr = new InetSocketAddress(getAddress(), getPortWithOffset());
             serverSock.bind(addr, getAcceptCount());
         }
+        // ServerSocketChannel  设置为阻塞的，并且不注册到selector中
         serverSock.configureBlocking(true); //mimic APR behavior
     }
 
@@ -464,6 +465,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
 
             // Set socket properties
             // Disable blocking, polling will be used
+            // accept到的socketChannel 设置为非阻塞的
             socket.configureBlocking(false);
             if (getUnixDomainSocketPath() == null) {
                 socketProperties.setProperties(socket.socket());
@@ -1706,11 +1708,13 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                 if (handshake == 0) {
                     SocketState state = SocketState.OPEN;
                     // Process the request from this socket
+                    // 处理 socket
                     if (event == null) {
                         state = getHandler().process(socketWrapper, SocketEvent.OPEN_READ);
                     } else {
                         state = getHandler().process(socketWrapper, event);
                     }
+                    // socket处理完了，就取消SelectionKey
                     if (state == SocketState.CLOSED) {
                         poller.cancelledKey(getSelectionKey(), socketWrapper);
                     }

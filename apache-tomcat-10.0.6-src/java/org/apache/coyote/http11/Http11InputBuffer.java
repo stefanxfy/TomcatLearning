@@ -346,7 +346,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         }
         //
         // Skipping blank lines
-        //
+        // 跳过前面的空白行
         if (parsingRequestLinePhase < 2) {
             do {
                 // Read new bytes if needed
@@ -366,6 +366,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
                     wrapper.setReadTimeout(connectionTimeout);
                 }
                 if (!keptAlive && byteBuffer.position() == 0 && byteBuffer.limit() >= CLIENT_PREFACE_START.length - 1) {
+                    // 匹配 是不是HTTP/2 ，是的话就直接返回false
                     boolean prefaceMatch = true;
                     for (int i = 0; i < CLIENT_PREFACE_START.length && prefaceMatch; i++) {
                         if (CLIENT_PREFACE_START[i] != byteBuffer.get(i)) {

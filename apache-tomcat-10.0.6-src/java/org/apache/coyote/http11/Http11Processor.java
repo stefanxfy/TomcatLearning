@@ -240,10 +240,12 @@ public class Http11Processor extends AbstractProcessor {
     @Override
     public SocketState service(SocketWrapperBase<?> socketWrapper)
         throws IOException {
+        // 设置 request 为解析状态
         RequestInfo rp = request.getRequestProcessor();
         rp.setStage(org.apache.coyote.Constants.STAGE_PARSE);
 
         // Setting up the I/O
+        // 将socketWrapper设置给inputBuffer、outputBuffer
         setSocketWrapper(socketWrapper);
 
         // Flags
@@ -257,6 +259,7 @@ public class Http11Processor extends AbstractProcessor {
                 sendfileState == SendfileState.DONE && !protocol.isPaused()) {
 
             // Parsing the request header
+            // 解析 request header
             try {
                 if (!inputBuffer.parseRequestLine(keptAlive, protocol.getConnectionTimeout(),
                         protocol.getKeepAliveTimeout())) {
