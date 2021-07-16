@@ -607,7 +607,6 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
             events.offer(event);
             // wakeupCounter的作用：
             // wakeupCounter 更新后==0，则selector.wakeup()，使得select立即返回
-            //
             if (wakeupCounter.incrementAndGet() == 0) {
                 selector.wakeup();
             }
@@ -833,6 +832,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                         if (socketWrapper.getSendfileData() != null) {
                             processSendfile(sk, socketWrapper, false);
                         } else {
+                            // 取消 sk和socketWrapper 读事件，防止多个线程扰乱套接字
                             unreg(sk, socketWrapper, sk.readyOps());
                             boolean closeSocket = false;
                             // Read goes before write
@@ -994,6 +994,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
 
         protected void unreg(SelectionKey sk, NioSocketWrapper socketWrapper, int readyOps) {
             // This is a must, so that we don't have multiple threads messing with the socket
+            // 这是必须的，这样我们就不会有多个线程扰乱套接字
             reg(sk, socketWrapper, sk.interestOps() & (~readyOps));
         }
 

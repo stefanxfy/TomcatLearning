@@ -1123,16 +1123,19 @@ public abstract class AbstractEndpoint<S,U> {
                 return false;
             }
             SocketProcessorBase<S> sc = null;
+            // 从缓存中获取Processor
             if (processorCache != null) {
                 sc = processorCache.pop();
             }
             if (sc == null) {
+                // 创建Processor
                 sc = createSocketProcessor(socketWrapper, event);
             } else {
                 sc.reset(socketWrapper, event);
             }
             Executor executor = getExecutor();
             if (dispatch && executor != null) {
+                // 丢到线程池里
                 executor.execute(sc);
             } else {
                 sc.run();
