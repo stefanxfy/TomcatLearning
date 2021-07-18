@@ -443,6 +443,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
         NioSocketWrapper socketWrapper = null;
         try {
             // Allocate channel and wrapper
+            // 将SocketChannel 封装成 NioChannel
             NioChannel channel = null;
             if (nioChannels != null) {
                 channel = nioChannels.pop();
@@ -658,6 +659,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                     socketWrapper.close();
                 } else if (interestOps == OP_REGISTER) {
                     try {
+                        // 将 SocketChannel 注册到getSelector上 事件为OP_READ
                         sc.register(getSelector(), SelectionKey.OP_READ, socketWrapper);
                     } catch (Exception x) {
                         log.error(sm.getString("endpoint.nio.registerFail"), x);
@@ -832,20 +834,23 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                         if (socketWrapper.getSendfileData() != null) {
                             processSendfile(sk, socketWrapper, false);
                         } else {
-                            // 取消 sk和socketWrapper 读事件，防止多个线程扰乱套接字
+                            // unreg  这个操作没看懂
                             unreg(sk, socketWrapper, sk.readyOps());
                             boolean closeSocket = false;
                             // Read goes before write
                             if (sk.isReadable()) {
+                                // 异步 切换 读模式，如果read buffer中还有数据要读完它
                                 if (socketWrapper.readOperation != null) {
                                     if (!socketWrapper.readOperation.process()) {
                                         closeSocket = true;
                                     }
                                 } else if (socketWrapper.readBlocking) {
+                                    // 唤醒 继续读
                                     synchronized (socketWrapper.readLock) {
                                         socketWrapper.readBlocking = false;
                                         socketWrapper.readLock.notify();
                                     }
+                                // 处理 socketWrapper 扔到线程池 异步处理
                                 } else if (!processSocket(socketWrapper, SocketEvent.OPEN_READ, true)) {
                                     closeSocket = true;
                                 }
@@ -1284,10 +1289,13 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                             throw new SocketTimeoutException();
                         }
                     }
+                    // 非阻塞读
                     n = getSocket().read(buffer);
                     if (n == -1) {
                         throw new EOFException();
                     } else if (n == 0) {
+                        // 可能一次没发送完，需要阻塞等待，
+                        // 将 socket重新注册给 Poller
                         readBlocking = true;
                         registerReadInterest();
                         synchronized (readLock) {

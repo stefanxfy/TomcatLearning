@@ -84,6 +84,7 @@ public class SocketBufferHandler {
                 }
             } else {
                 // Switching to read
+                // 切换为读模式
                 readBuffer.flip();
             }
             this.readBufferConfiguredForWrite = readBufferConFiguredForWrite;

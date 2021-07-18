@@ -347,6 +347,7 @@ public class Http11Processor extends AbstractProcessor {
             }
 
             if (getErrorState().isIoAllowed()) {
+                // ErrorState.NONE
                 // Setting up filters, and parse some request headers
                 rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
                 try {
@@ -651,6 +652,7 @@ public class Http11Processor extends AbstractProcessor {
 
         // Check for an absolute-URI less the query string which has already
         // been removed during the parsing of the request line
+        // 设置uri
         ByteChunk uriBC = request.requestURI().getByteChunk();
         byte[] uriB = uriBC.getBytes();
         if (uriBC.startsWithIgnoreCase("http", 0)) {
