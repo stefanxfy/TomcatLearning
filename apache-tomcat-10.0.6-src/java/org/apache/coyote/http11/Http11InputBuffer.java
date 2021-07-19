@@ -339,6 +339,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      */
     boolean parseRequestLine(boolean keptAlive, int connectionTimeout, int keepAliveTimeout)
             throws IOException {
+        // RequestLine 格式是怎样的？
 
         // check state
         if (!parsingRequestLine) {
@@ -386,8 +387,9 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
                 }
                 chr = byteBuffer.get();
             } while ((chr == Constants.CR) || (chr == Constants.LF));
+            // 多读了一个字节，减回去
             byteBuffer.position(byteBuffer.position() - 1);
-
+            // 下面就是RequestLine的起始字节位置了
             parsingRequestLineStart = byteBuffer.position();
             parsingRequestLinePhase = 2;
         }
@@ -431,6 +433,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
                 }
                 chr = byteBuffer.get();
                 if (!(chr == Constants.SP || chr == Constants.HT)) {
+                    // 找到下一个开始点
                     space = false;
                     byteBuffer.position(byteBuffer.position() - 1);
                 }
@@ -500,11 +503,14 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
                 }
             }
             if (parsingRequestLineQPos >= 0) {
+                // ? 后面的参数
                 request.queryString().setBytes(byteBuffer.array(), parsingRequestLineQPos + 1,
                         end - parsingRequestLineQPos - 1);
+                // uri
                 request.requestURI().setBytes(byteBuffer.array(), parsingRequestLineStart,
                         parsingRequestLineQPos - parsingRequestLineStart);
             } else {
+                // 没有参数
                 request.requestURI().setBytes(byteBuffer.array(), parsingRequestLineStart,
                         end - parsingRequestLineStart);
             }
@@ -554,7 +560,9 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
                     // Possible end of request line. Need LF next else invalid.
                 } else if (prevChr == Constants.CR && chr == Constants.LF) {
                     // CRLF is the standard line terminator
+                    // CRLF是标准的线终止符
                     end = pos - 1;
+                    //  RequestLine 终止了
                     parsingRequestLineEol = true;
                 } else if (chr == Constants.LF) {
                     // LF is an optional line terminator
@@ -789,6 +797,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         }
 
         int nRead = -1;
+        // 先mark一下
         byteBuffer.mark();
         try {
             if (byteBuffer.position() < byteBuffer.limit()) {
@@ -797,6 +806,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             byteBuffer.limit(byteBuffer.capacity());
             SocketWrapperBase<?> socketWrapper = this.wrapper;
             if (socketWrapper != null) {
+                // 从socket底层读取数据
                 nRead = socketWrapper.read(block, byteBuffer);
             } else {
                 throw new CloseNowException(sm.getString("iib.eof.error"));
@@ -805,6 +815,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             // Ensure that the buffer limit and position are returned to a
             // consistent "ready for read" state if an error occurs during in
             // the above code block.
+            // reset 恢复
             byteBuffer.limit(byteBuffer.position()).reset();
         }
 
