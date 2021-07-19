@@ -339,7 +339,8 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      */
     boolean parseRequestLine(boolean keptAlive, int connectionTimeout, int keepAliveTimeout)
             throws IOException {
-        // RequestLine 格式是怎样的？
+        // RequestLine eg:
+        // GET /tomcat.svg?v=2324&b=444 HTTP/1.1
 
         // check state
         if (!parsingRequestLine) {
@@ -581,6 +582,8 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             }
             // If no protocol is found, the ISE below will be triggered.
         }
+        System.out.println("----------------------------------------------");
+        System.out.println(new String(byteBuffer.array()));;
         if (parsingRequestLinePhase == 7) {
             // Parsing is complete. Return and clean-up.
             parsingRequestLine = false;
