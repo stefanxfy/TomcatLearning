@@ -132,8 +132,10 @@ public class PojoMethodMapping {
                         if (currentClazz == clazzPojo ||
                                 !isMethodOverride(open, method)) {
                             // Duplicate annotation
-                            // method 父类，open 子类，都加了注解，
-                            // 但是子类open没有重写 method
+                            // 抛出Duplicate annotation异常的两种情况：
+                            // 1. 当前的类有多个相同注解的方法，如有两个@OnOpen
+                            // 2. 当前类时父类，有相同注解的方法，但是其子类没有重写这个方法
+                            // 即 父类和子类有多个相同注解的方法，且没有重写关系
                             throw new DeploymentException(sm.getString(
                                     "pojoMethodMapping.duplicateAnnotation",
                                     OnOpen.class, currentClazz));
@@ -169,7 +171,12 @@ public class PojoMethodMapping {
                     checkPublic(method);
                     MessageHandlerInfo messageHandler = new MessageHandlerInfo(method, decoders);
                     boolean found = false;
+                    // 第一次扫描OnMessage时，onMessage为空，不会走下面的for，然后就把messageHandler加到onMessage里
+                    // 如果非首次扫描到这里，即向上扫描父类，允许有多个接收消息类型完全不同的onmessage
                     for (MessageHandlerInfo otherMessageHandler : onMessage) {
+                        // 如果多个onmessage接收的消息类型有相同的，则可能会抛出Duplicate annotation
+                        // 1. 同一个类中多个onmessage有接收相同类型的消息
+                        // 2. 父子类中多个onmessage有接收相同类型的消息，但不是重写关系
                         if (messageHandler.targetsSameWebSocketMessageType(otherMessageHandler)) {
                             found = true;
                             if (currentClazz == clazzPojo ||
@@ -193,6 +200,8 @@ public class PojoMethodMapping {
         // If the methods are not on clazzPojo and they are overridden
         // by a non annotated method in clazzPojo, they should be ignored
         if (open != null && open.getDeclaringClass() != clazzPojo) {
+            // open 有可能是父类的，子类即clazzPojo有重写该方法，但是没有加OnOpen注解
+            // 则 open置为null
             if (isOverridenWithoutAnnotation(clazzPojoMethods, open, OnOpen.class)) {
                 open = null;
             }
@@ -214,6 +223,7 @@ public class PojoMethodMapping {
                 overriddenOnMessage.add(messageHandler);
             }
         }
+        // 子类重写了的onmessage方法，但没有加OnMessage注解的需要从onMessage list 中删除
         for (MessageHandlerInfo messageHandler : overriddenOnMessage) {
             onMessage.remove(messageHandler);
         }
@@ -310,7 +320,6 @@ public class PojoMethodMapping {
         return result;
     }
 
-
     private static PojoPathParam[] getPathParams(Method m,
             MethodType methodType) throws DeploymentException {
         if (m == null) {
@@ -345,6 +354,10 @@ public class PojoMethodMapping {
                     }
                 }
                 // Parameters without annotations are not permitted
+                // 限制了每个生命周期方法的可以有的形参
+                // onOpen Session, EndpointConfig, 带PathParam的
+                // onError Session, Throwable, 带PathParam的
+                // onClose Session, CloseReason, 带PathParam的
                 if (result[i] == null) {
                     throw new DeploymentException(sm.getString(
                             "pojoMethodMapping.paramWithoutAnnotation",
@@ -352,6 +365,7 @@ public class PojoMethodMapping {
                 }
             }
         }
+        // 强制onClose必须带Throwable参数
         if (methodType == MethodType.ON_ERROR && !foundThrowable) {
             throw new DeploymentException(sm.getString(
                     "pojoMethodMapping.onErrorNoThrowable",
@@ -625,6 +639,11 @@ public class PojoMethodMapping {
         }
 
 
+        /**
+         * 判断两个onmessage 形参里是否有相同的message类型
+         * @param otherHandler
+         * @return
+         */
         public boolean targetsSameWebSocketMessageType(MessageHandlerInfo otherHandler) {
             if (otherHandler == null) {
                 return false;
