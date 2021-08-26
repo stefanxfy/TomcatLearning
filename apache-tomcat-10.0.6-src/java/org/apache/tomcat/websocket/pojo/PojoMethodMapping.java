@@ -132,6 +132,8 @@ public class PojoMethodMapping {
                         if (currentClazz == clazzPojo ||
                                 !isMethodOverride(open, method)) {
                             // Duplicate annotation
+                            // method 父类，open 子类，都加了注解，
+                            // 但是子类open没有重写 method
                             throw new DeploymentException(sm.getString(
                                     "pojoMethodMapping.duplicateAnnotation",
                                     OnOpen.class, currentClazz));

@@ -258,8 +258,8 @@ public class Http11Processor extends AbstractProcessor {
         while (!getErrorState().isError() && keepAlive && !isAsync() && upgradeToken == null &&
                 sendfileState == SendfileState.DONE && !protocol.isPaused()) {
 
-            // Parsing the request header
-            // 解析 request header
+            // Parsing the request line
+            // 1. 解析 request line
             try {
                 if (!inputBuffer.parseRequestLine(keptAlive, protocol.getConnectionTimeout(),
                         protocol.getKeepAliveTimeout())) {
@@ -273,6 +273,7 @@ public class Http11Processor extends AbstractProcessor {
                 // Process the Protocol component of the request line
                 // Need to know if this is an HTTP 0.9 request before trying to
                 // parse headers.
+                // 2. prepare Request Protocol
                 prepareRequestProtocol();
 
                 if (protocol.isPaused()) {
@@ -284,6 +285,7 @@ public class Http11Processor extends AbstractProcessor {
                     // Set this every time in case limit has been changed via JMX
                     request.getMimeHeaders().setLimit(protocol.getMaxHeaderCount());
                     // Don't parse headers for HTTP/0.9
+                    // 3. parseHeaders
                     if (!http09 && !inputBuffer.parseHeaders()) {
                         // We've read part of the request, don't recycle it
                         // instead associate it with the socket
@@ -323,6 +325,7 @@ public class Http11Processor extends AbstractProcessor {
             }
 
             // Has an upgrade been requested?
+            // 升级协议
             if (isConnectionToken(request.getMimeHeaders(), "upgrade")) {
                 // Check the protocol
                 String requestedProtocol = request.getHeader("Upgrade");

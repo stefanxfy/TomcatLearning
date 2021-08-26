@@ -583,7 +583,8 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             // If no protocol is found, the ISE below will be triggered.
         }
         System.out.println("----------------------------------------------");
-        System.out.println(new String(byteBuffer.array()));;
+        System.out.println(new String(byteBuffer.array()));
+        System.out.println(request.method().toString());
         if (parsingRequestLinePhase == 7) {
             // Parsing is complete. Return and clean-up.
             parsingRequestLine = false;
@@ -862,6 +863,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             if (chr == Constants.CR && prevChr != Constants.CR) {
                 // Possible start of CRLF - process the next byte.
             } else if (chr == Constants.LF) {
+                // CRLF或LF是可接受的行结束符
                 // CRLF or LF is an acceptable line terminator
                 return HeaderParseStatus.DONE;
             } else {
@@ -899,6 +901,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
 
             int pos = byteBuffer.position();
             chr = byteBuffer.get();
+            // COLON = (byte) ':'
             if (chr == Constants.COLON) {
                 headerParsePos = HeaderParsePosition.HEADER_VALUE_START;
                 headerData.headerValue = headers.addValue(byteBuffer.array(), headerData.start,

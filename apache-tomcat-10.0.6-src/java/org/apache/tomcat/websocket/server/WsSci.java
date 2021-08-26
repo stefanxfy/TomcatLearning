@@ -73,20 +73,24 @@ public class WsSci implements ServletContainerInitializer {
                     continue;
                 }
                 // Protect against scanning the WebSocket API JARs
+                // 防止扫描WebSocket API jar
                 if (clazz.getName().startsWith(wsPackage)) {
                     continue;
                 }
                 if (ServerApplicationConfig.class.isAssignableFrom(clazz)) {
+                    // 1、clazz是ServerApplicationConfig子类
                     serverApplicationConfigs.add(
                             (ServerApplicationConfig) clazz.getConstructor().newInstance());
                 }
                 if (Endpoint.class.isAssignableFrom(clazz)) {
+                    // 2、clazz是Endpoint子类
                     @SuppressWarnings("unchecked")
                     Class<? extends Endpoint> endpoint =
                             (Class<? extends Endpoint>) clazz;
                     scannedEndpointClazzes.add(endpoint);
                 }
                 if (clazz.isAnnotationPresent(ServerEndpoint.class)) {
+                    // 3、clazz是加了注解ServerEndpoint的类
                     scannedPojoEndpoints.add(clazz);
                 }
             }
@@ -99,14 +103,18 @@ public class WsSci implements ServletContainerInitializer {
         Set<Class<?>> filteredPojoEndpoints = new HashSet<>();
 
         if (serverApplicationConfigs.isEmpty()) {
+            // 从这里看出@ServerEndpoint的服务器端是可以不用ServerApplicationConfig的
             filteredPojoEndpoints.addAll(scannedPojoEndpoints);
         } else {
+            // serverApplicationConfigs不为空，
             for (ServerApplicationConfig config : serverApplicationConfigs) {
                 Set<ServerEndpointConfig> configFilteredEndpoints =
                         config.getEndpointConfigs(scannedEndpointClazzes);
                 if (configFilteredEndpoints != null) {
                     filteredEndpointConfigs.addAll(configFilteredEndpoints);
                 }
+                // getAnnotatedEndpointClasses 对于 scannedPojoEndpoints起到一个过滤作用
+                // 不满足条件的后面不加到WsServerContainer里
                 Set<Class<?>> configFilteredPojos =
                         config.getAnnotatedEndpointClasses(
                                 scannedPojoEndpoints);
@@ -117,6 +125,8 @@ public class WsSci implements ServletContainerInitializer {
         }
 
         try {
+            // 继承抽象类Endpoint的需要使用者手动封装成ServerEndpointConfig
+            // 而加了注解@ServerEndpoint的类 Tomcat会自动封装成ServerEndpointConfig
             // Deploy endpoints
             for (ServerEndpointConfig config : filteredEndpointConfigs) {
                 sc.addEndpoint(config);
