@@ -250,6 +250,7 @@ public class WsServerContainer extends WsWebSocketContainer
             String path = annotation.value();
 
             // Validate encoders
+            // 需要实例化编码器，以确保它是有效的，如果不是，则部署可能失败。
             validateEncoders(annotation.encoders(), getInstanceManager(Thread.currentThread().getContextClassLoader()));
 
             // ServerEndpointConfig
@@ -266,6 +267,7 @@ public class WsServerContainer extends WsWebSocketContainer
                             pojo.getClass().getName()), e);
                 }
             }
+            // 构建 ServerEndpointConfig
             sec = ServerEndpointConfig.Builder.create(pojo, path).
                     decoders(Arrays.asList(annotation.decoders())).
                     encoders(Arrays.asList(annotation.encoders())).
@@ -470,8 +472,7 @@ public class WsServerContainer extends WsWebSocketContainer
 
         for (Class<? extends Encoder> encoder : encoders) {
             // Need to instantiate encoder to ensure it is valid and that
-            // deployment can be failed if it is not. The encoder is then
-            // discarded immediately.
+            // deployment can be failed if it is not. The encoder is then discarded immediately.
             Encoder instance;
             try {
                 if (instanceManager == null) {
