@@ -22,20 +22,6 @@ import java.util.Set;
 
 public interface WebSocketContainer {
 
-    /**
-     * Get the default timeout for sending a message asynchronously.
-     * @return The current default timeout in milliseconds. A non-positive value
-     *         means an infinite timeout.
-     */
-    long getDefaultAsyncSendTimeout();
-
-    /**
-     * Set the default timeout for sending a message asynchronously.
-     * @param timeout The new default timeout in milliseconds. A non-positive
-     *                value means an infinite timeout.
-     */
-    void setAsyncSendTimeout(long timeout);
-
     Session connectToServer(Object endpoint, URI path)
             throws DeploymentException, IOException;
 
@@ -83,6 +69,21 @@ public interface WebSocketContainer {
     Session connectToServer(Class<? extends Endpoint> endpoint,
             ClientEndpointConfig clientEndpointConfiguration, URI path)
             throws DeploymentException, IOException;
+
+    /**
+     * Set the default timeout for sending a message asynchronously.
+     * @param timeout The new default timeout in milliseconds. A non-positive
+     *                value means an infinite timeout.
+     */
+    void setAsyncSendTimeout(long timeout);
+
+
+    /**
+     * Get the default timeout for sending a message asynchronously.
+     * @return The current default timeout in milliseconds. A non-positive value
+     *         means an infinite timeout.
+     */
+    long getDefaultAsyncSendTimeout();
 
     /**
      * Get the current default session idle timeout.

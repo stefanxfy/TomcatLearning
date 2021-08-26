@@ -35,12 +35,17 @@ public @interface ServerEndpoint {
      */
     String value();
 
+    // 使用者在WebSocket协议下扩展定义的子协议，还不知道怎么用，暂时不需要了解
     String[] subprotocols() default {};
 
+    // 使用者可以自定义一堆消息解码类
     Class<? extends Decoder>[] decoders() default {};
 
+    // 使用者自定义消息编码类
     Class<? extends Encoder>[] encoders() default {};
 
+    // Configurator 其实就像一个生产ServerEndpoint的工厂，
+    // 用户可以自定义怎么创建ServerEndpoint对象
     public Class<? extends ServerEndpointConfig.Configurator> configurator()
             default ServerEndpointConfig.Configurator.class;
 }

@@ -70,7 +70,9 @@
     -->
     <Connector port="8081" protocol="HTTP/1.1"
                connectionTimeout="20000"
-               redirectPort="8443" />
+               redirectPort="8443">
+      <UpgradeProtocol className="org.apache.coyote.http2.Http2Protocol"/>
+    </Connector>>
     <Connector port="8080" protocol="HTTP/1.1"
                connectionTimeout="20000"
                URIEncoding="UTF-8"

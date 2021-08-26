@@ -259,7 +259,7 @@ public class Http11Processor extends AbstractProcessor {
                 sendfileState == SendfileState.DONE && !protocol.isPaused()) {
 
             // Parsing the request header
-            // 解析 request header
+            // 解析 RequestLine
             try {
                 if (!inputBuffer.parseRequestLine(keptAlive, protocol.getConnectionTimeout(),
                         protocol.getKeepAliveTimeout())) {
@@ -273,6 +273,7 @@ public class Http11Processor extends AbstractProcessor {
                 // Process the Protocol component of the request line
                 // Need to know if this is an HTTP 0.9 request before trying to
                 // parse headers.
+                // 确认 Protocol
                 prepareRequestProtocol();
 
                 if (protocol.isPaused()) {
@@ -284,6 +285,7 @@ public class Http11Processor extends AbstractProcessor {
                     // Set this every time in case limit has been changed via JMX
                     request.getMimeHeaders().setLimit(protocol.getMaxHeaderCount());
                     // Don't parse headers for HTTP/0.9
+                    // 解析 headers
                     if (!http09 && !inputBuffer.parseHeaders()) {
                         // We've read part of the request, don't recycle it
                         // instead associate it with the socket
@@ -552,7 +554,7 @@ public class Http11Processor extends AbstractProcessor {
     }
 
 
-    private void prepareRequestProtocol() {
+    private void  prepareRequestProtocol() {
 
         MessageBytes protocolMB = request.protocol();
         if (protocolMB.equals(Constants.HTTP_11)) {
@@ -596,8 +598,11 @@ public class Http11Processor extends AbstractProcessor {
         }
 
         MimeHeaders headers = request.getMimeHeaders();
+        System.out.println("---------headers---------------");
+        System.out.println(headers.toString());
 
         // Check connection header
+        // Connection: keep-alive
         MessageBytes connectionValueMB = headers.getValue(Constants.CONNECTION);
         if (connectionValueMB != null && !connectionValueMB.isNull()) {
             Set<String> tokens = new HashSet<>();
@@ -630,6 +635,7 @@ public class Http11Processor extends AbstractProcessor {
             // and keepAlive flags accordingly
             if(userAgentValueMB != null && !userAgentValueMB.isNull()) {
                 String userAgentValue = userAgentValueMB.toString();
+                // 是否在受限制的user-agent里
                 if (restrictedUserAgents.matcher(userAgentValue).matches()) {
                     http11 = false;
                     keepAlive = false;

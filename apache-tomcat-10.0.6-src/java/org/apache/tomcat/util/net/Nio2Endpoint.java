@@ -423,8 +423,10 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel,AsynchronousS
             // Configure the socket
             if (isRunning() && !isPaused()) {
                 if (getMaxConnections() == -1) {
+                    // 没有限制，使劲accept
                     serverSock.accept(null, this);
                 } else if (getConnectionCount() < getMaxConnections()) {
+                    // 在最大范围内，可以继续accept
                     try {
                         // This will not block
                         countUpOrAwaitConnection();
