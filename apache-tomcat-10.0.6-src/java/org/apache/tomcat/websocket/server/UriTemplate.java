@@ -75,6 +75,7 @@ public class UriTemplate {
             }
             normalized.append('/');
             int index = -1;
+            // 解析 pathParam
             if (segment.startsWith("{") && segment.endsWith("}")) {
                 index = segmentCount;
                 segment = segment.substring(1, segment.length() - 1);
@@ -82,6 +83,7 @@ public class UriTemplate {
                 normalized.append(paramCount++);
                 normalized.append('}');
                 if (!paramNames.add(segment)) {
+                    // 重了
                     throw new DeploymentException(sm.getString(
                             "uriTemplate.duplicateParameter", segment));
                 }
@@ -92,10 +94,11 @@ public class UriTemplate {
                 }
                 normalized.append(segment);
             }
+            // 解析的pathParam segment de index是 segment的位置，普通的是-1
             this.segments.add(new Segment(index, segment));
             segmentCount++;
         }
-
+        // /hello/test/{1}/{2}
         this.normalized = normalized.toString();
         this.hasParameters = paramCount > 0;
     }

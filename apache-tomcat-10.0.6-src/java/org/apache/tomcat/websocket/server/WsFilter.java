@@ -38,6 +38,7 @@ public class WsFilter extends GenericFilter {
 
     @Override
     public void init() throws ServletException {
+        // 从
         sc = (WsServerContainer) getServletContext().getAttribute(
                 Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
     }

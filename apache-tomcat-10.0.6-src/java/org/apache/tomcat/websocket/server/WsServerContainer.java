@@ -152,6 +152,7 @@ public class WsServerContainer extends WsWebSocketContainer
             String path = sec.getPath();
 
             // Add method mapping to user properties
+            // PojoMethodMapping 对生命周期方法扫描和封装，只针对 注解版的，非注解的是空的
             PojoMethodMapping methodMapping = new PojoMethodMapping(sec.getEndpointClass(),
                     sec.getDecoders(), path, getInstanceManager(Thread.currentThread().getContextClassLoader()));
             if (methodMapping.getOnClose() != null || methodMapping.getOnOpen() != null
@@ -162,6 +163,7 @@ public class WsServerContainer extends WsWebSocketContainer
 
             UriTemplate uriTemplate = new UriTemplate(path);
             if (uriTemplate.hasParameters()) {
+                // 下面的逻辑是检查是否有重复的uri
                 Integer key = Integer.valueOf(uriTemplate.getSegmentCount());
                 ConcurrentSkipListMap<String,TemplatePathMatch> templateMatches =
                         configTemplateMatchMap.get(key);
@@ -180,6 +182,7 @@ public class WsServerContainer extends WsWebSocketContainer
                     if (oldMatch.isFromAnnotatedPojo() && !newMatch.isFromAnnotatedPojo() &&
                             oldMatch.getConfig().getEndpointClass() == newMatch.getConfig().getEndpointClass()) {
                         // The WebSocket spec says to ignore the new match in this case
+                        // WebSocket规范说在这种情况下忽略新的匹配
                         templateMatches.put(path, oldMatch);
                     } else {
                         // Duplicate uriTemplate;
@@ -191,6 +194,7 @@ public class WsServerContainer extends WsWebSocketContainer
                 }
             } else {
                 // Exact match
+                // 没有 path params
                 ExactPathMatch newMatch = new ExactPathMatch(sec, fromAnnotatedPojo);
                 ExactPathMatch oldMatch = configExactMatchMap.put(path, newMatch);
                 if (oldMatch != null) {
