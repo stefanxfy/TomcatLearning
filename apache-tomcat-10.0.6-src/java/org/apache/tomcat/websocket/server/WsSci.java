@@ -148,14 +148,18 @@ public class WsSci implements ServletContainerInitializer {
 
         servletContext.setAttribute(
                 Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE, sc);
-
+        // 注册监听器WsSessionListener给servletContext，
+        // 在http session销毁时触发 ws session的关闭销毁
         servletContext.addListener(new WsSessionListener(sc));
         // Can't register the ContextListener again if the ContextListener is
         // calling this method
         if (initBySciMechanism) {
+            // 注册监听器WsContextListener给servletContext，
+            // 在 servletContext初始化时触发WsSci.init
+            // 在 servletContext销毁时触发WsServerContainer的销毁
+            // 不过呢，只在WsSci.onStartup时注册一次
             servletContext.addListener(new WsContextListener());
         }
-
         return sc;
     }
 }

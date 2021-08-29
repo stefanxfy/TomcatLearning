@@ -61,6 +61,7 @@ public class WsFrameServer extends WsFrameBase {
         if (log.isDebugEnabled()) {
             log.debug("wsFrameServer.onDataAvailable");
         }
+
         if (isOpen() && inputBuffer.hasRemaining() && !isSuspended()) {
             // There might be a data that was left in the buffer when
             // the read has been suspended.

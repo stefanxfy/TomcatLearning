@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itcat.dao.StudentDao">
+<sql id="Base_Column">
+SELECT stu.id as stu_id,stu.stu_name as stu_name,stu.age as stu_age,stu.class_id as class_id
+FROM student
+</sql>
+
+<sql id="Detail_Column">
+SELECT stu.id as stu_id,stu.stu_name as stu_name,stu.age as stu_age,stu.class_id as class_id,class.class_name as class_name
+FROM student as stu left join classroom as class on stu.class_id = class.id
+</sql>
+
+
+<resultMap type="com.itcat.pojo.Student" id="BaseResultMap">
+<id column="stu_id" property="id"/>
+<result column="stu_name" property="stuName"/>
+<result column="stu_age" property="age"/>
+<result column="class_id" property="classId"/>
+<result column="class_name" property="className"/>
+</resultMap>
+
+<resultMap type="com.itcat.pojo.Student" id="DetailResultMap" extends="BaseResultMap">
+<association property="card" javaType="com.itcat.pojo.StuCard">
+<id column="card_id" property="id"/>
+<result column="card_no" property="cardNo"/>
+<result column="stu_id" property="stuId"/>
+<result column="stu_name" property="stuName"/>
+</association>
+
+<association property="score" javaType="com.itcat.pojo.Score"
+ resultMap="com.itcat.dao.ScoreDao.BaseResultMap"/>
+</resultMap>
+
+<select id="getBasic" resultMap="BaseResultMap">
+<include refid="Detail_Column"/>
+</select>
+
+<select id="getByClassId" resultMap="BaseResultMap">
+<include refid="Detail_Column"/>WHERE class_id = #{classId}
+</select>
+
+<select id="getDetail" resultMap="DetailResultMap">
+SELECT stu.id as stu_id,stu.stu_name as stu_name,stu.age as stu_age,stu.class_id as class_id,class.class_name as class_name,
+card.id as card_id ,card.card_no as card_no,
+score.id as score_id,math,chinese,english
+FROM student as stu left join stu_card as card on stu.id=card.stu_id
+left join score as score on stu.id = score.stu_id 
+left join classroom as class on stu.class_id = class.id
+</select>
+
+<insert id="add" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+insert into student(stu_name,age,class_id)
+values(#{stuName},#{age},#{classId})
+</insert>
+
+<update id="update">
+update student 
+<set>
+<if test="stuName!=null">stu_name=#{stuName},</if>
+<if test="age!=null">age=#{age},</if>
+<if test="classId!=null">class_id=#{classId}</if>
+</set>
+where id=#{id}
+</update>
+
+
+<select id="getByCondition" resultMap="BaseResultMap">
+<include refid="Detail_Column"/>
+<where>
+<if test="condition!=null">stu_name like '%${condition}%'</if>
+<if test="classId!=null">and class_id = #{classId}</if>
+</where>
+</select>
+
+<select id="getByNameAndAge" resultMap="BaseResultMap">
+<include refid="Detail_Column"/>
+<where>
+<if test="name!=null">stu_name=#{name}</if>
+<if test="age!=null">and age=#{age}</if>
+</where>
+
+</select>
+
+<delete id="deletes">
+delete from student where id in <foreach collection="ids"
+ open="(" close=")" separator="," item="id" >
+#{id}
+</foreach>
+</delete>
+
+
+</mapper>

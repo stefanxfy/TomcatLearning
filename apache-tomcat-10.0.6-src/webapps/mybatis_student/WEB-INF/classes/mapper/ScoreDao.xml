@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itcat.dao.ScoreDao">
+<resultMap type="com.itcat.pojo.Score" id="BaseResultMap">
+<id column="score_id" property="id"/>
+<result column="score_math" property="math"/>
+<result column="score_chinese" property="chinese"/>
+<result column="score_english" property="english"/>
+<result column="stu_id" property="stuId"/>
+<result column="stu_name" property="stuName"/>
+</resultMap>
+
+
+
+
+<insert id="add" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+insert into score
+
+<trim prefix="(" suffix=")" suffixOverrides=",">
+<if test="math!=null">math,</if>
+<if test="chinese!=null">chinese,</if>
+<if test="english!=null">english,</if>
+<if test="stuId!=null">stu_id,</if>
+</trim>
+
+<trim prefix="values(" suffix=")" suffixOverrides=",">
+<if test="math!=null">#{math},</if>
+<if test="chinese!=null">#{chinese},</if>
+<if test="english!=null">#{english},</if>
+<if test="stuId!=null">#{stuId},</if>
+</trim>
+
+</insert>
+
+</mapper>

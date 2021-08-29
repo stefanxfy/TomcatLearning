@@ -75,8 +75,8 @@ public class UpgradeUtil {
         return ((request instanceof HttpServletRequest) &&
                 (response instanceof HttpServletResponse) &&
                 headerContainsToken((HttpServletRequest) request,
-                        Constants.UPGRADE_HEADER_NAME,
-                        Constants.UPGRADE_HEADER_VALUE) &&
+                        Constants.UPGRADE_HEADER_VALUE,
+                        Constants.UPGRADE_HEADER_NAME) &&
                 "GET".equals(((HttpServletRequest) request).getMethod()));
     }
 
