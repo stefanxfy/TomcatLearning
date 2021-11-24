@@ -2046,13 +2046,15 @@ public class Request implements HttpServletRequest {
                 SecurityException e) {
             throw new ServletException(e);
         }
+        // 构建 UpgradeToken，UpgradeToken主要包含WsHttpUpgradeHandler、context、协议名称protocol
         UpgradeToken upgradeToken = new UpgradeToken(handler, getContext(), instanceManager,
                 getUpgradeProtocolName(httpUpgradeHandlerClass));
-
+        // 回调action 进行升级
         coyoteRequest.action(ActionCode.UPGRADE, upgradeToken);
 
         // Output required by RFC2616. Protocol specific headers should have
         // already been set.
+        // 设置响应101
         response.setStatus(HttpServletResponse.SC_SWITCHING_PROTOCOLS);
 
         return handler;

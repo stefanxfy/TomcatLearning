@@ -75,8 +75,8 @@ public class UpgradeUtil {
         return ((request instanceof HttpServletRequest) &&
                 (response instanceof HttpServletResponse) &&
                 headerContainsToken((HttpServletRequest) request,
-                        Constants.UPGRADE_HEADER_VALUE,
-                        Constants.UPGRADE_HEADER_NAME) &&
+                        Constants.UPGRADE_HEADER_NAME,
+                        Constants.UPGRADE_HEADER_VALUE) &&
                 "GET".equals(((HttpServletRequest) request).getMethod()));
     }
 
@@ -90,11 +90,13 @@ public class UpgradeUtil {
         // validation fails
         String key;
         String subProtocol = null;
+        // 检查请求头中是否有 Connection: upgrade
         if (!headerContainsToken(req, Constants.CONNECTION_HEADER_NAME,
                 Constants.CONNECTION_HEADER_VALUE)) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
+        // 检查请求头中的 Sec-WebSocket-Version:13
         if (!headerContainsToken(req, Constants.WS_VERSION_HEADER_NAME,
                 Constants.WS_VERSION_HEADER_VALUE)) {
             resp.setStatus(426);
@@ -102,6 +104,7 @@ public class UpgradeUtil {
                     Constants.WS_VERSION_HEADER_VALUE);
             return;
         }
+        // 获取 Sec-WebSocket-Key
         key = req.getHeader(Constants.WS_KEY_HEADER_NAME);
         if (key == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -109,7 +112,7 @@ public class UpgradeUtil {
         }
 
 
-        // Origin check
+        // Origin check，校验 Origin 是否有权限
         String origin = req.getHeader(Constants.ORIGIN_HEADER_NAME);
         if (!sec.getConfigurator().checkOrigin(origin)) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -181,12 +184,13 @@ public class UpgradeUtil {
         if (transformation != null && !transformation.validateRsvBits(0)) {
             throw new ServletException(sm.getString("upgradeUtil.incompatibleRsv"));
         }
-
+        // 设置resp的响应头Upgrade:websocket  、 Connection: upgrade 、Sec-WebSocket-Accept:
         // If we got this far, all is good. Accept the connection.
         resp.setHeader(Constants.UPGRADE_HEADER_NAME,
                 Constants.UPGRADE_HEADER_VALUE);
         resp.setHeader(Constants.CONNECTION_HEADER_NAME,
                 Constants.CONNECTION_HEADER_VALUE);
+        // 通过Sec-WebSocket-Key生成Sec-WebSocket-Accept的值
         resp.setHeader(HandshakeResponse.SEC_WEBSOCKET_ACCEPT,
                 getWebSocketAccept(key));
         if (subProtocol != null && subProtocol.length() > 0) {
@@ -212,7 +216,7 @@ public class UpgradeUtil {
                 resp.addHeader(entry.getKey(), headerValue);
             }
         }
-
+        // 调用 request.upgrade 进行升级
         WsHttpUpgradeHandler wsHandler =
                 req.upgrade(WsHttpUpgradeHandler.class);
         wsHandler.preInit(perSessionServerEndpointConfig, sc, wsRequest,
