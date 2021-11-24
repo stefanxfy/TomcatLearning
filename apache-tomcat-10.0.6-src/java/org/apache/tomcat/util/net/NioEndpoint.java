@@ -77,14 +77,13 @@ import org.apache.tomcat.util.net.jsse.JSSESupport;
  * @author Remy Maucherat
  */
 public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> {
-
-
     // -------------------------------------------------------------- Constants
 
 
     private static final Log log = LogFactory.getLog(NioEndpoint.class);
 
 
+    // 256    100000000
     public static final int OP_REGISTER = 0x100; //register interest op
 
     // ----------------------------------------------------------------- Fields
@@ -1067,6 +1066,8 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                                     writeTimeout = true;
                                 }
                             }
+                            // 如果有超时，且已经在读写了，继续丢进线程池里读写，
+                            // 否则发生丢个error处理器到线程池
                             if (readTimeout || writeTimeout) {
                                 key.interestOps(0);
                                 // Avoid duplicate timeout calls
