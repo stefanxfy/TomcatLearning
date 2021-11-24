@@ -352,6 +352,7 @@ public class WsServerContainer extends WsWebSocketContainer
         }
 
         // Number of segments has to match
+        // 找到TemplatePathMatch
         Integer key = Integer.valueOf(pathUriTemplate.getSegmentCount());
         ConcurrentSkipListMap<String,TemplatePathMatch> templateMatches = configTemplateMatchMap.get(key);
 

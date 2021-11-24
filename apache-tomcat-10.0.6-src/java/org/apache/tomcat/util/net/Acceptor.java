@@ -124,6 +124,7 @@ public class Acceptor<U> implements Runnable {
                     if (!stopCalled && !endpoint.isPaused()) {
                         // setSocketOptions() will hand the socket off to
                         // an appropriate processor if successful
+                        // setSocketOptions 会将socket 传递给一个合适的 processor
                         if (!endpoint.setSocketOptions(socket)) {
                             endpoint.closeSocket(socket);
                         }
@@ -214,6 +215,8 @@ public class Acceptor<U> implements Runnable {
 
         // On subsequent exceptions, start the delay at 50ms, doubling the delay
         // on every subsequent exception until the delay reaches 1.6 seconds.
+        // 在后续的异常情况下，以50ms开始延迟，将延迟加倍
+        // 每一个后续异常，直到延迟达到1.6秒。
         if (currentErrorDelay == 0) {
             return INITIAL_ERROR_DELAY;
         } else if (currentErrorDelay < MAX_ERROR_DELAY) {

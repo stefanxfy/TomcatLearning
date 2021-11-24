@@ -287,6 +287,8 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
             pollerThread.start();
 
             startAcceptorThread();
+
+            // 线程模型：1-Acceptor(Thread) : 1-Poller(Thread) : n-SocketProcessor(ThreadPoolExecutor)
         }
     }
 
@@ -443,7 +445,6 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
         NioSocketWrapper socketWrapper = null;
         try {
             // Allocate channel and wrapper
-            // 将SocketChannel 封装成 NioChannel
             NioChannel channel = null;
             if (nioChannels != null) {
                 channel = nioChannels.pop();
@@ -459,6 +460,8 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                     channel = new NioChannel(bufhandler);
                 }
             }
+            // SocketChannel 封装进 NioChannel，NioChannel 封装进 NioSocketWrapper
+            // TODO NioChannel 和 NioSocketWrapper 原理需要深入
             NioSocketWrapper newWrapper = new NioSocketWrapper(channel, this);
             channel.reset(socket, newWrapper);
             connections.put(socket, newWrapper);
@@ -475,6 +478,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
             socketWrapper.setReadTimeout(getConnectionTimeout());
             socketWrapper.setWriteTimeout(getConnectionTimeout());
             socketWrapper.setKeepAliveLeft(NioEndpoint.this.getMaxKeepAliveRequests());
+            // 将 socketWrapper 注册给 poller
             poller.register(socketWrapper);
             return true;
         } catch (Throwable t) {
@@ -711,14 +715,15 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
             if (eventCache != null) {
                 event = eventCache.pop();
             }
+            // NioSocketWrapper 会被再次封装进 PollerEvent
             if (event == null) {
                 // 缓存中没有，则新建一个 PollerEvent
                 event = new PollerEvent(socketWrapper, OP_REGISTER);
             } else {
-                // 缓存有，则重置PollerEvent为OP_REGISTER
+                // 缓存有，则重置 PollerEvent为 OP_REGISTER
                 event.reset(socketWrapper, OP_REGISTER);
             }
-            // 将PollerEvent添加到events阻塞队列中
+            // 将 PollerEvent 添加到 events 阻塞队列中
             addEvent(event);
         }
 
@@ -766,6 +771,14 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                 try {
                     if (!close) {
                         hasEvents = events();
+                        /**
+                         * addEvent:
+                         * incrementAndGet 返回的是+1之后的结果
+                         * 那就是从-1 +1 = 0 时 wakeup 这个逻辑很正常，有 event 就唤醒selector
+                         *  if (wakeupCounter.incrementAndGet() == 0) {
+                         *     selector.wakeup();
+                         *   }
+                         */
                         if (wakeupCounter.getAndSet(-1) > 0) {
                             // wakeupCounter 设置为-1，并返回旧值, 旧wakeupCounter > 0 说明有PollerEvent要处理
                             // 则调用selector.selectNow() 不阻塞
@@ -777,8 +790,8 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                             // 则调用 阻塞的 selector.select
                             keyCount = selector.select(selectorTimeout);
                         }
-                        // 没有PollerEvent要处理或者已经被处理，
-                        // 这里设置 wakeupCounter = 0
+
+                        // 设置 wakeupCounter = 0，走到这说明selector没有在阻塞中，也就不需要addEvent那边wakeup
                         wakeupCounter.set(0);
                     }
                     if (close) {

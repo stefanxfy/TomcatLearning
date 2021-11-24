@@ -42,7 +42,7 @@ public class LimitLatch {
         protected int tryAcquireShared(int ignored) {
             long newCount = count.incrementAndGet();
             if (!released && newCount > limit) {
-                // Limit exceeded
+                // Limit exceeded，相当于获取锁失败，进入队列阻塞
                 count.decrementAndGet();
                 return -1;
             } else {
@@ -137,6 +137,7 @@ public class LimitLatch {
      */
     public boolean releaseAll() {
         released = true;
+        // 唤醒 fifo队列
         return sync.releaseShared(0);
     }
 
@@ -155,6 +156,7 @@ public class LimitLatch {
      * @return <code>true</code> if threads are waiting
      */
     public boolean hasQueuedThreads() {
+        // 队列是否为空
         return sync.hasQueuedThreads();
     }
 

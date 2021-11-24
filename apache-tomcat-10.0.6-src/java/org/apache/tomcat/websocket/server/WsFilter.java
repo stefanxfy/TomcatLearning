@@ -38,7 +38,6 @@ public class WsFilter extends GenericFilter {
 
     @Override
     public void init() throws ServletException {
-        // 从
         sc = (WsServerContainer) getServletContext().getAttribute(
                 Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
     }
@@ -49,6 +48,8 @@ public class WsFilter extends GenericFilter {
             FilterChain chain) throws IOException, ServletException {
 
         // This filter only needs to handle WebSocket upgrade requests
+        // 1、判断WsServerContainer是否加载注册Endpoint
+        // 判断请求头中是否有 Upgrade: websocket
         if (!sc.areEndpointsRegistered() ||
                 !UpgradeUtil.isWebSocketUpgradeRequest(request, response)) {
             chain.doFilter(request, response);
@@ -67,6 +68,7 @@ public class WsFilter extends GenericFilter {
         } else {
             path = req.getServletPath() + pathInfo;
         }
+        // 2、通过 path 即uri 找到对应的 ServerEndpointConfig + pathParams
         WsMappingResult mappingResult = sc.findMapping(path);
 
         if (mappingResult == null) {
