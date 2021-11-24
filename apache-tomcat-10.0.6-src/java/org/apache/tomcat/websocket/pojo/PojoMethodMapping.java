@@ -134,7 +134,7 @@ public class PojoMethodMapping {
                             // Duplicate annotation
                             // 抛出Duplicate annotation异常的两种情况：
                             // 1. 当前的类有多个相同注解的方法，如有两个@OnOpen
-                            // 2. 当前类时父类，有相同注解的方法，但是其子类没有重写这个方法
+                            // 2. 当前类是父类，有相同注解的方法，但是其子类没有重写这个方法
                             // 即 父类和子类有多个相同注解的方法，且没有重写关系
                             throw new DeploymentException(sm.getString(
                                     "pojoMethodMapping.duplicateAnnotation",
@@ -230,6 +230,7 @@ public class PojoMethodMapping {
         this.onOpen = open;
         this.onClose = close;
         this.onError = error;
+        // 参数解析
         onOpenParams = getPathParams(onOpen, MethodType.ON_OPEN);
         onCloseParams = getPathParams(onClose, MethodType.ON_CLOSE);
         onErrorParams = getPathParams(onError, MethodType.ON_ERROR);
